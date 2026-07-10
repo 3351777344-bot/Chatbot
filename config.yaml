@@ -1,0 +1,46 @@
+app:
+  name: langchain-chat
+  version: 0.1.0
+  # Multi-environment extension point (REQ-001):
+  # env: dev
+  # Future loaders may merge config.yaml with config.{env}.yaml.
+
+models:
+  default: deepseek-chat
+  available:
+    - deepseek-chat
+    - gpt-4o-mini
+    - qwen-plus
+  temperature: 0.7
+  max_tokens: 4096
+
+storage:
+  type: sqlite
+  sqlite:
+    path: data/chatbot.db
+  mysql:
+    host: localhost
+    port: 3306
+    database: langchain_chat
+    username: langchain_chat
+    password_env: MYSQL_PASSWORD
+    charset: utf8mb4
+  file:
+    dir: data/chats
+    format: json
+
+llm:
+  timeout: 60
+  max_retries: 3
+
+session:
+  title_max_length: 24
+
+export:
+  dir: data/exports
+  filename_template: "chat_{session_id}_{timestamp}.{format}"
+
+# Reserved multi-environment files (not implemented in Step 1):
+# - config.dev.yaml
+# - config.test.yaml
+# - config.prod.yaml

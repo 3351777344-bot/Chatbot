@@ -1,6 +1,41 @@
-.env
+# Python virtual environments and caches
 .venv/
+venv/
 __pycache__/
 *.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local environment files (keep the shareable template)
+.env
+.env.local
+.env.dev
+.env.test
+.env.prod
+.env.*.local
+!.env.example
+
+# Runtime data and logs
+data/
+logs/
+*.log
+
+# IDE settings
+.idea/
+.vscode/
+
+# Streamlit local secrets
 .streamlit/secrets.toml
-data/chatbot.db
+
+# Build and packaging outputs
+build/
+dist/
+*.egg-info/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/

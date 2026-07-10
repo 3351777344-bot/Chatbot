@@ -1,0 +1,27 @@
+[project]
+name = "langchain-chat"
+version = "0.1.0"
+description = "A LangChain-based multi-turn chatbot course project."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "streamlit>=1.36.0",
+    "langchain>=0.2.10",
+    "langchain-openai>=0.1.17",
+    "python-dotenv>=1.0.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

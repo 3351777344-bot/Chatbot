@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 async def async_main() -> None:
     from core.config_manager import get_config
     from storage.factory import StorageFactory
+    from core.preset_manager import PresetManager
     from ui.tui.app import TUIApp
 
     config = get_config()
@@ -17,6 +18,9 @@ async def async_main() -> None:
     backend = StorageFactory.create(config=config)
     await backend.initialize()
     try:
+        imported = await PresetManager(backend).load_builtin_presets()
+        if imported:
+            print(f"[启动] 已导入 {imported} 个内置预设")
         await TUIApp(backend).run()
     finally:
         await backend.close()

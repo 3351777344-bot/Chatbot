@@ -49,6 +49,9 @@ class StorageBackend(ABC):
     async def search_messages(self, user_id: int, keyword: str) -> list[Message]: ...
 
     @abstractmethod
+    async def get_preset_by_id(self, preset_id: int) -> Preset | None: ...
+
+    @abstractmethod
     async def save_preset(self, preset: Preset) -> Preset: ...
 
     @abstractmethod
@@ -62,4 +65,3 @@ class StorageBackend(ABC):
 
     @abstractmethod
     async def set_user_config(self, config: UserConfig) -> None: ...
-

@@ -5,20 +5,24 @@ import platform
 from interface.ui_protocol import AbstractUI
 from core.config_manager import get_config
 from core.user_manager import UserManager
+from core.preset_manager import PresetManager
 from storage.base import StorageBackend
 from ui.tui import menu_view, widgets
 from ui.tui.chat_view import start_chat
 
 MAIN_MENU_OPTIONS = ["用户管理", "会话管理", "预设管理", "开始对话", "设置", "关于", "退出"]
 USER_MENU_OPTIONS = ["创建用户", "列出所有用户", "切换当前用户", "删除用户", "返回主菜单"]
+PRESET_MENU_OPTIONS = ["浏览预设", "选择预设", "新建自定义预设", "编辑自定义预设", "删除自定义预设", "返回主菜单"]
 
 
 class TUIApp(AbstractUI):
     def __init__(self, backend: StorageBackend | None = None) -> None:
         self.backend = backend
         self.user_manager = UserManager(backend) if backend else None
+        self.preset_manager = PresetManager(backend) if backend else None
         self.current_user = None
         self.current_session = None
+        self.current_preset = None
 
     async def display_message(self, role: str, content: str) -> None:
         labels = {"human": "[bold cyan][你][/]", "ai": "[bold green][AI][/]"}
@@ -51,7 +55,7 @@ class TUIApp(AbstractUI):
             elif choice == 1:
                 menu_view.show_session_menu()
             elif choice == 2:
-                menu_view.show_preset_menu()
+                await self._show_preset_menu()
             elif choice == 3:
                 await start_chat()
             elif choice == 4:
@@ -139,3 +143,73 @@ class TUIApp(AbstractUI):
             return
         await self.user_manager.delete_user(user.id)
         widgets.print_success(f"用户 '{username}' 已删除（关联数据已自动清理）")
+
+    async def _show_preset_menu(self) -> None:
+        if self.current_user is None:
+            widgets.print_warning("请先创建或切换用户")
+            return
+        while True:
+            choice = await self.display_menu("预设管理", PRESET_MENU_OPTIONS)
+            if choice in (-1, 5):
+                return
+            try:
+                if choice == 0:
+                    await self._list_presets()
+                elif choice == 1:
+                    await self._select_preset()
+                elif choice == 2:
+                    await self._create_preset()
+                elif choice == 3:
+                    await self._edit_preset()
+                elif choice == 4:
+                    await self._delete_preset()
+            except ValueError as exc:
+                widgets.print_error(str(exc))
+
+    async def _list_presets(self) -> list:
+        presets = await self.preset_manager.list_presets(self.current_user.id)
+        for preset in presets:
+            kind = "内置" if preset.is_builtin else "自定义"
+            selected = " <- 当前" if self.current_preset and preset.id == self.current_preset.id else ""
+            widgets.console.print(f"  id={preset.id} [{kind}] [cyan]{preset.name}[/] {preset.description}{selected}")
+        widgets.print_info(f"共 {len(presets)} 个可用预设")
+        return presets
+
+    async def _select_preset(self) -> None:
+        await self._list_presets()
+        raw = await self.get_user_input("输入预设 id，输入 0 表示不使用预设")
+        if raw == "0":
+            self.current_preset = None
+            widgets.print_success("已取消预设")
+            return
+        preset = await self.preset_manager.get_preset(int(raw))
+        if preset is None or (not preset.is_builtin and preset.user_id != self.current_user.id):
+            raise ValueError("预设不存在或不可访问")
+        self.current_preset = preset
+        widgets.print_success(f"已选择预设: {preset.name}")
+
+    async def _create_preset(self) -> None:
+        preset = await self.preset_manager.create_preset(
+            self.current_user.id,
+            await self.get_user_input("预设名称"),
+            await self.get_user_input("预设描述"),
+            await self.get_user_input("系统提示词"),
+        )
+        widgets.print_success(f"已创建预设: {preset.name}（id={preset.id}）")
+
+    async def _edit_preset(self) -> None:
+        preset = await self.preset_manager.get_preset(int(await self.get_user_input("要编辑的预设 id")))
+        if preset is None:
+            raise ValueError("预设不存在")
+        name = widgets.read_text("预设名称", preset.name)
+        description = widgets.read_text("预设描述", preset.description)
+        prompt = widgets.read_text("系统提示词", preset.system_prompt)
+        await self.preset_manager.update_preset(preset, name, description, prompt, self.current_user.id)
+        widgets.print_success("预设已更新")
+
+    async def _delete_preset(self) -> None:
+        preset_id = int(await self.get_user_input("要删除的预设 id"))
+        await self.preset_manager.delete_preset(preset_id, self.current_user.id)
+        if self.current_preset and self.current_preset.id == preset_id:
+            self.current_preset = None
+        widgets.print_success("预设已删除")

@@ -59,5 +59,7 @@ def read_choice(max_choice: int) -> int:
             print_error("请输入数字")
 
 
-def read_text(prompt_text: str) -> str:
-    return input(f"{prompt_text}: ").strip()
+def read_text(prompt_text: str, default: str | None = None) -> str:
+    suffix = f" [{default}]" if default is not None else ""
+    value = input(f"{prompt_text}{suffix}: ").strip()
+    return default if not value and default is not None else value

@@ -189,6 +189,10 @@ class SQLiteBackend(StorageBackend):
         await self.conn.commit()
         return preset
 
+    async def get_preset_by_id(self, preset_id: int) -> Preset | None:
+        row = await self._one("SELECT * FROM presets WHERE id=?", (preset_id,))
+        return self._preset(row) if row else None
+
     async def list_presets(self, user_id: int) -> list[Preset]:
         rows = await self._all("SELECT * FROM presets WHERE user_id IS NULL OR user_id=? ORDER BY is_builtin DESC,id", (user_id,))
         return [self._preset(row) for row in rows]
@@ -234,4 +238,3 @@ class SQLiteBackend(StorageBackend):
         data = dict(row)
         data["is_builtin"] = bool(data["is_builtin"])
         return Preset(**data)
-

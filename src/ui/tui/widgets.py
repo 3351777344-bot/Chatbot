@@ -8,11 +8,12 @@ from rich.text import Text
 console = Console()
 
 
-def print_banner(version: str, python_version: str) -> None:
+def print_banner(version: str, python_version: str, current_step: str = "") -> None:
     text = Text("LangChain Chat", style="bold cyan")
     text.append(f"  v{version}", style="dim")
     text.append(f"\nPython {python_version}", style="green")
-    text.append("\n当前进度：Step 2  数据模型与 TUI 骨架", style="yellow")
+    if current_step:
+        text.append(f"\n当前进度：{current_step}", style="yellow")
     console.print(Panel(text, border_style="cyan", title="欢迎", title_align="left"))
 
 
@@ -60,4 +61,3 @@ def read_choice(max_choice: int) -> int:
 
 def read_text(prompt_text: str) -> str:
     return input(f"{prompt_text}: ").strip()
-

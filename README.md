@@ -17,6 +17,9 @@ Step 10 起可从会话菜单导出 Markdown；对话中使用 `/model 模型名
 将 `storage.type` 设为 `file` 可使用 JSON 文件后端，数据目录由 `storage.file.dir/path` 指定。
 应用日志同时输出到控制台和 `logs/langchain-chat.log`，文件内容为便于采集的 JSON Lines。
 
+运行测试：`uv run pytest`。测试默认使用临时 SQLite/File 数据目录和假 LLM，不访问网络、
+不消耗 API Key；可用 `uv run pytest --cov=src` 查看覆盖率。
+
 ## 项目特性
 
 - 基于 LangChain 调用 OpenAI-compatible 大模型接口

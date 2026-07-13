@@ -24,7 +24,8 @@ package = false
 
 [tool.pytest.ini_options]
 addopts = "-ra"
-pythonpath = ["."]
+asyncio_mode = "auto"
+pythonpath = [".", "src"]
 testpaths = ["tests"]
 
 [tool.ruff]
@@ -33,3 +34,10 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+]

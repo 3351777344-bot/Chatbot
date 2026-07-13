@@ -15,7 +15,8 @@
 | Step 9 对话搜索 | 已验收 | 当前用户关键词搜索、结果分组与原始记录查看测试 | `step-9-search` |
 | Step 10 导出与模型切换 | 已验收 | Markdown 导出、默认模型和会话模型白名单切换测试 | `step-10-export-switch` |
 | Step 11 MySQL 后端 | 已实现 | 全接口/建表 SQL/工厂构造验证；真实连接需外部 MySQL | `step-11-mysql` |
-| Step 12 File 后端与日志 | 已实现 | File 全 CRUD/重载/级联测试；JSON 日志解析测试 | `step-12-logging-file`（提交后创建） |
-| Step 13–15 | 待实施 | 见《实施步骤计划》 | 待创建 |
+| Step 12 File 后端与日志 | 已验收 | File 全 CRUD/重载/级联测试；JSON 日志解析测试 | `step-12-logging-file` |
+| Step 13 单元测试 | 已实现 | `uv run pytest` | `step-13-tests`（提交后创建） |
+| Step 14–15 | 待实施 | 见《实施步骤计划》 | 待创建 |
 
 最后更新：2026-07-13。

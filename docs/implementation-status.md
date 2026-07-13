@@ -8,7 +8,8 @@
 | Step 2 数据模型与 TUI 骨架 | 已验收 | 模型/配置导入检查；TUI 启动后可显示并退出主菜单 | `step-2-skeleton` |
 | Step 3 SQLite 存储后端 | 已验收 | `uv run python scripts/init_db.py`；CRUD/搜索/级联删除冒烟测试 | `step-3-sqlite` |
 | Step 4 用户管理 | 已验收 | 业务规则自动测试；TUI 创建/列出/切换/删除 | `step-4-user-mgmt` |
-| Step 5 预设管理 | 已实现 | 内置预设幂等导入；私有预设 CRUD/权限隔离测试 | `step-5-presets`（提交后创建） |
-| Step 6–15 | 待实施 | 见《实施步骤计划》 | 待创建 |
+| Step 5 预设管理 | 已验收 | 内置预设幂等导入；私有预设 CRUD/权限隔离测试 | `step-5-presets` |
+| Step 6 对话引擎 | 已实现 | 注入式假模型验证同步、流式、历史消息与 Token 统计 | `step-6-chat-engine`（提交后创建） |
+| Step 7–15 | 待实施 | 见《实施步骤计划》 | 待创建 |
 
 最后更新：2026-07-13。

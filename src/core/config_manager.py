@@ -60,6 +60,18 @@ class AppConfig:
     def title_max_length(self) -> int:
         return int(self.get("session", "title_max_length", default=30))
 
+    @property
+    def temperature(self) -> float:
+        return float(self.get("models", "temperature", default=0.7))
+
+    @property
+    def max_tokens(self) -> int:
+        return int(self.get("models", "max_tokens", default=2048))
+
+    @property
+    def current_step(self) -> str:
+        return str(self.get("app", "current_step", default=""))
+
     def get(self, *keys: str, default: Any = None) -> Any:
         value: Any = self._yaml_config
         for key in keys:
@@ -77,4 +89,3 @@ def get_config() -> AppConfig:
     if _config_instance is None:
         _config_instance = AppConfig()
     return _config_instance
-

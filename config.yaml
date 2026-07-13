@@ -1,6 +1,7 @@
 app:
   name: langchain-chat
   version: 0.1.0
+  current_step: "Step 2  数据模型与 TUI 骨架"
   # Multi-environment extension point (REQ-001):
   # env: dev
   # Future loaders may merge config.yaml with config.{env}.yaml.
@@ -8,9 +9,12 @@ app:
 models:
   default: deepseek-chat
   available:
-    - deepseek-chat
-    - gpt-4o-mini
-    - qwen-plus
+    - name: DeepSeek Chat
+      value: deepseek-chat
+    - name: GPT-4o mini
+      value: gpt-4o-mini
+    - name: Qwen Plus
+      value: qwen-plus
   temperature: 0.7
   max_tokens: 4096
 

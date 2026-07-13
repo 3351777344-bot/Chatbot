@@ -1,25 +1,23 @@
-"""Step 1 command-line entry point for project initialization verification."""
+"""加载配置并启动异步 TUI。"""
 
-from __future__ import annotations
+import asyncio
+import sys
+from pathlib import Path
 
-import platform
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
-PROJECT_NAME = "langchain-chat"
-PROJECT_VERSION = "0.1.0"
-CURRENT_PROGRESS = "Step 1：项目初始化与工程化配置"
+async def async_main() -> None:
+    from core.config_manager import get_config
+    from ui.tui.app import TUIApp
+
+    config = get_config()
+    print(f"[启动] 存储后端: {config.storage_type}，默认模型: {config.default_model}")
+    await TUIApp().run()
 
 
 def main() -> None:
-    """Print the Step 1 startup banner without starting later-stage services."""
-    border = "=" * 58
-    print(border)
-    print(f"项目名：{PROJECT_NAME}")
-    print(f"版本号：{PROJECT_VERSION}")
-    print(f"Python 版本：{platform.python_version()}")
-    print(f"当前进度：{CURRENT_PROGRESS}")
-    print("启动成功：Step 1 工程化配置验证通过")
-    print(border)
+    asyncio.run(async_main())
 
 
 if __name__ == "__main__":

@@ -25,6 +25,11 @@ class UserManager:
     async def delete_user(self, user_id: int) -> None:
         await self.backend.delete_user(user_id)
 
+    async def set_default_model(self, user: User, model_name: str, available: set[str]) -> None:
+        if model_name not in available:
+            raise ValueError(f"模型不可用: {model_name}")
+        user.default_model = model_name
+        await self.backend.update_user(user)
+
     async def user_exists(self, username: str) -> bool:
         return await self.get_user(username) is not None
-

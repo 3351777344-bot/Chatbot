@@ -82,8 +82,20 @@ async def _handle_command(app, command: str) -> bool:
         else:
             await app.session_manager.update_title(app.current_session, argument)
             widgets.print_success("标题已更新")
+    elif name == "/model":
+        model = argument.strip()
+        await app.session_manager.switch_model(
+            app.current_session, model, set(app.config.available_model_values)
+        )
+        app.chat_engine = app.chat_engine.for_model(model)
+        widgets.print_success(f"当前会话模型已切换为: {model}")
+    elif name == "/export":
+        path = await app.session_manager.export_markdown(
+            app.current_session.id, app.current_user.username, app.current_user.id
+        )
+        widgets.print_success(f"已导出到: {path}")
     elif name == "/help":
-        widgets.console.print("/exit 返回  /new 新会话  /rename 标题  /help 帮助")
+        widgets.console.print("/exit 返回  /new 新会话  /rename 标题  /model 模型  /export  /help")
     else:
         widgets.print_warning(f"未知命令: {name}")
     return False

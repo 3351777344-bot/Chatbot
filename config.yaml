@@ -1,7 +1,7 @@
 app:
   name: langchain-chat
   version: 0.1.0
-  current_step: "Step 9  对话搜索"
+  current_step: "Step 10  导出与模型切换"
   # Multi-environment extension point (REQ-001):
   # env: dev
   # Future loaders may merge config.yaml with config.{env}.yaml.

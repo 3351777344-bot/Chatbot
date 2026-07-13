@@ -79,3 +79,6 @@ class ChatEngine:
         close = getattr(self.llm, "aclose", None)
         if close is not None:
             await close()
+
+    def for_model(self, model_name: str) -> "ChatEngine":
+        return ChatEngine(self.config, model_name=model_name)

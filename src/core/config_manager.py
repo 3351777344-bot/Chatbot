@@ -49,6 +49,13 @@ class AppConfig:
         return self.get("models", "available", default=[])
 
     @property
+    def available_model_values(self) -> list[str]:
+        return [
+            str(item.get("value")) if isinstance(item, dict) else str(item)
+            for item in self.available_models
+        ]
+
+    @property
     def llm_timeout(self) -> int:
         return int(self.get("llm", "timeout", default=30))
 

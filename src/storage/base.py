@@ -22,6 +22,9 @@ class StorageBackend(ABC):
     async def list_users(self) -> list[User]: ...
 
     @abstractmethod
+    async def update_user(self, user: User) -> None: ...
+
+    @abstractmethod
     async def delete_user(self, user_id: int) -> None: ...
 
     @abstractmethod

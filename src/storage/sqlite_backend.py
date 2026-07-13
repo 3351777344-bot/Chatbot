@@ -107,6 +107,14 @@ class SQLiteBackend(StorageBackend):
     async def list_users(self) -> list[User]:
         return [self._user(row) for row in await self._all("SELECT * FROM users ORDER BY id")]
 
+    async def update_user(self, user: User) -> None:
+        user.updated_at = datetime.now(timezone.utc)
+        await self.conn.execute(
+            "UPDATE users SET username=?,default_model=?,default_preset_id=?,updated_at=? WHERE id=?",
+            (user.username, user.default_model, user.default_preset_id, user.updated_at.isoformat(), user.id),
+        )
+        await self.conn.commit()
+
     async def delete_user(self, user_id: int) -> None:
         await self.conn.execute("DELETE FROM users WHERE id=?", (user_id,))
         await self.conn.commit()

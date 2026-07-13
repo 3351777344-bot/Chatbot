@@ -1,6 +1,8 @@
 """会话、历史消息、Token 累计与标题管理。"""
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from pathlib import Path
+import re
 
 from core.config_manager import AppConfig
 from models.schemas import Message, Session
@@ -99,6 +101,37 @@ class SessionManager:
         if session is None:
             raise ValueError("会话不存在或无权访问")
         await self.backend.delete_session(session_id)
+
+    async def switch_model(
+        self, session: Session, model_name: str, available: set[str]
+    ) -> None:
+        if model_name not in available:
+            raise ValueError(f"模型不可用: {model_name}")
+        session.model_name = model_name
+        await self.backend.update_session(session)
+
+    async def export_markdown(
+        self, session_id: int, username: str, user_id: int | None = None
+    ) -> Path:
+        session = await self.get_session(session_id, user_id)
+        if session is None:
+            raise ValueError("会话不存在或无权访问")
+        messages = await self.get_session_messages(session_id)
+        safe_title = re.sub(r'[<>:"/\\|?*]+', "_", session.title).strip(" .") or f"session-{session.id}"
+        export_dir = str(self.config.get("export", "dir", default="data/exports"))
+        export_dir = export_dir.format(username=username)
+        path = Path(export_dir) / f"{safe_title}_{session.id}.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        lines = [
+            f"# {session.title}", "", f"- 用户：{username}", f"- 模型：{session.model_name}",
+            f"- Prompt Token：{session.total_prompt_tokens}",
+            f"- Completion Token：{session.total_completion_tokens}", "",
+        ]
+        labels = {"human": "用户", "ai": "助手", "system": "系统"}
+        for message in messages:
+            lines.extend([f"## {labels[message.role]}", "", message.content, ""])
+        path.write_text("\n".join(lines), encoding="utf-8")
+        return path
 
     @staticmethod
     def _to_langchain(message: Message) -> BaseMessage:

@@ -15,7 +15,7 @@ from ui.tui.chat_view import start_chat
 MAIN_MENU_OPTIONS = ["用户管理", "会话管理", "预设管理", "开始对话", "搜索对话", "设置", "关于", "退出"]
 USER_MENU_OPTIONS = ["创建用户", "列出所有用户", "切换当前用户", "删除用户", "返回主菜单"]
 PRESET_MENU_OPTIONS = ["浏览预设", "选择预设", "新建自定义预设", "编辑自定义预设", "删除自定义预设", "返回主菜单"]
-SESSION_MENU_OPTIONS = ["列出会话", "加载会话", "新建会话", "重命名会话", "删除会话", "查看会话记录", "返回主菜单"]
+SESSION_MENU_OPTIONS = ["列出会话", "加载会话", "新建会话", "重命名会话", "删除会话", "查看会话记录", "导出 Markdown", "返回主菜单"]
 
 
 class TUIApp(AbstractUI):
@@ -70,7 +70,7 @@ class TUIApp(AbstractUI):
             elif choice == 4:
                 await self._search_messages()
             elif choice == 5:
-                menu_view.show_settings_menu()
+                await self._show_settings_menu()
             elif choice == 6:
                 menu_view.show_about()
             elif choice == 7:
@@ -231,7 +231,7 @@ class TUIApp(AbstractUI):
             return
         while True:
             choice = await self.display_menu("会话管理", SESSION_MENU_OPTIONS)
-            if choice in (-1, 6):
+            if choice in (-1, 7):
                 return
             try:
                 if choice == 0:
@@ -246,6 +246,8 @@ class TUIApp(AbstractUI):
                     await self._delete_session()
                 elif choice == 5:
                     await self._view_session_messages()
+                elif choice == 6:
+                    await self._export_session()
             except (ValueError, TypeError) as exc:
                 widgets.print_error(str(exc))
 
@@ -330,3 +332,23 @@ class TUIApp(AbstractUI):
                 label = {"human": "你", "ai": "AI", "system": "系统"}[message.role]
                 widgets.console.print(f"  [{label}] {message.content}")
         widgets.print_info(f"找到 {len(results)} 条匹配消息")
+
+    async def _export_session(self) -> None:
+        session_id = int(await self.get_user_input("要导出的会话 id"))
+        path = await self.session_manager.export_markdown(
+            session_id, self.current_user.username, self.current_user.id
+        )
+        widgets.print_success(f"已导出到: {path}")
+
+    async def _show_settings_menu(self) -> None:
+        if self.current_user is None:
+            widgets.print_warning("请先创建或切换用户")
+            return
+        models = self.config.available_model_values
+        widgets.console.print("可用模型: " + ", ".join(models))
+        model = await self.get_user_input("设置新会话默认模型")
+        try:
+            await self.user_manager.set_default_model(self.current_user, model, set(models))
+            widgets.print_success(f"默认模型已切换为: {model}")
+        except ValueError as exc:
+            widgets.print_error(str(exc))

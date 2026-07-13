@@ -4,8 +4,14 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.output.win32 import NoConsoleScreenBufferError
+import asyncio
 
 console = Console()
+_chat_prompt: PromptSession | None = None
+_chat_history = InMemoryHistory()
 
 
 def print_banner(version: str, python_version: str, current_step: str = "") -> None:
@@ -63,3 +69,16 @@ def read_text(prompt_text: str, default: str | None = None) -> str:
     suffix = f" [{default}]" if default is not None else ""
     value = input(f"{prompt_text}{suffix}: ").strip()
     return default if not value and default is not None else value
+
+
+async def read_chat_input(prompt_text: str = "你 > ") -> str:
+    """异步读取对话输入，并支持上下箭头回看历史。"""
+    global _chat_prompt
+    try:
+        if _chat_prompt is None:
+            _chat_prompt = PromptSession(history=_chat_history)
+        return (await _chat_prompt.prompt_async(prompt_text)).strip()
+    except NoConsoleScreenBufferError:
+        return (await asyncio.to_thread(input, prompt_text)).strip()
+    except (EOFError, KeyboardInterrupt):
+        return "/exit"

@@ -6,6 +6,8 @@ from interface.ui_protocol import AbstractUI
 from core.config_manager import get_config
 from core.user_manager import UserManager
 from core.preset_manager import PresetManager
+from core.session_manager import SessionManager
+from core.chat_engine import ChatEngine
 from storage.base import StorageBackend
 from ui.tui import menu_view, widgets
 from ui.tui.chat_view import start_chat
@@ -16,10 +18,13 @@ PRESET_MENU_OPTIONS = ["浏览预设", "选择预设", "新建自定义预设", 
 
 
 class TUIApp(AbstractUI):
-    def __init__(self, backend: StorageBackend | None = None) -> None:
+    def __init__(self, backend: StorageBackend | None = None, chat_engine: ChatEngine | None = None) -> None:
+        self.config = get_config()
         self.backend = backend
+        self.chat_engine = chat_engine
         self.user_manager = UserManager(backend) if backend else None
         self.preset_manager = PresetManager(backend) if backend else None
+        self.session_manager = SessionManager(backend, self.config) if backend else None
         self.current_user = None
         self.current_session = None
         self.current_preset = None
@@ -57,7 +62,10 @@ class TUIApp(AbstractUI):
             elif choice == 2:
                 await self._show_preset_menu()
             elif choice == 3:
-                await start_chat()
+                if self.chat_engine is None:
+                    widgets.print_error("对话引擎未初始化")
+                else:
+                    await start_chat(self)
             elif choice == 4:
                 menu_view.show_settings_menu()
             elif choice == 5:

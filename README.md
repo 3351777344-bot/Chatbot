@@ -1,143 +1,178 @@
 # langchain-chat
 
-`langchain-chat` 是基于 LangChain 的异步多用户聊天系统。主线应用提供 TUI、多轮流式对话、
-Prompt 预设、历史管理与搜索、Markdown 导出、模型切换，以及 SQLite/MySQL/File 可插拔存储。
-仓库原有 Streamlit 入口仍保留，可独立运行。
+基于 LangChain 的异步多用户聊天系统，当前已完成《实施步骤计划》Step 1–15。主线应用为
+Rich TUI，支持多轮流式对话、用户与预设管理、历史会话、搜索、Markdown 导出、模型切换，
+以及 SQLite、MySQL、JSON File 三种可插拔存储后端。
 
-Step 7 已将无状态 ChatEngine、会话历史与 TUI 对话视图打通：每轮消息自动保存，历史会
-自动注入上下文，终端逐段显示回复并累计 Token 用量。
+仓库还保留了早期 `app.py` Streamlit 应用。它使用原有 `database/`、`services/` 等模块，
+与 `src/` 下的 Step 1–15 主线架构相互独立。
 
-Step 10 起可从会话菜单导出 Markdown；对话中使用 `/model 模型名` 切换当前会话模型，
-使用 `/export` 导出当前会话。设置菜单可修改当前用户后续新会话的默认模型。
+## 已实现功能
 
-切换 MySQL：将 `storage.type` 设为 `mysql`，在 `storage.mysql` 配置主机、端口、用户和库名，
-并通过 `.env` 的 `MYSQL_PASSWORD` 提供密码；`scripts/init_db.py` 会创建库表。
+- OpenAI-compatible LLM，异步流式输出、超时重试和 Token 统计
+- 多用户创建、切换、删除及数据访问隔离
+- 系统内置与用户私有 Prompt 预设
+- 会话新建、加载、重命名、删除、自动保存和自动标题
+- 当前用户历史消息搜索与会话记录查看
+- Markdown 导出、用户默认模型和会话内模型切换
+- SQLite、MySQL、JSON File 可插拔存储
+- dev/test/prod 配置、密钥、数据库和导出目录隔离
+- 控制台日志和 JSON Lines 滚动文件日志
+- 13 项离线自动化测试，不访问真实 LLM
 
-将 `storage.type` 设为 `file` 可使用 JSON 文件后端，数据目录由 `storage.file.dir/path` 指定。
-应用日志同时输出到控制台和 `logs/langchain-chat.log`，文件内容为便于采集的 JSON Lines。
+## 环境要求
 
-运行测试：`uv run pytest`。测试默认使用临时 SQLite/File 数据目录和假 LLM，不访问网络、
-不消耗 API Key；可用 `uv run pytest --cov=src` 查看覆盖率。
-
-## 项目特性
-
-- 基于 LangChain 调用 OpenAI-compatible 大模型接口
-- Streamlit 可视化聊天界面与流式回复
-- 多轮对话、模型切换和预设角色 Prompt
-- SQLite 会话历史持久化与多用户数据隔离
-- 历史会话切换、自动标题和手动重命名
-- uv 统一管理 Python 版本约束、虚拟环境和依赖锁定
-- 环境变量、业务配置、Prompt 数据和日志配置分层管理
-
-## 技术栈
-
-- Python `>=3.10,<3.13`
-- uv
-- LangChain、langchain-openai
-- Streamlit
-- SQLite（Python 标准库）
-- YAML 配置文件
-
-## 目录结构
-
-```text
-Chatbot/
-├── app.py                         # 已有 Streamlit 聊天应用入口
-├── pyproject.toml                 # 项目元数据、依赖与工具配置
-├── uv.lock                        # uv 生成的依赖锁文件
-├── requirements.txt               # 保留的原依赖清单（兼容旧流程）
-├── config.yaml                    # 全局业务配置与扩展点
-├── config/
-│   ├── settings.py                # 已有聊天应用环境变量配置
-│   ├── presets.yaml               # Step 1 内置 Prompt 预设
-│   └── logging.yaml               # 日志配置
-├── database/                      # 已有 SQLite 数据访问代码
-├── prompts/                       # 已有聊天 Prompt 代码
-├── services/                      # 已有聊天与模型服务
-├── utils/                         # 已有工具代码
-├── src/
-│   ├── __init__.py
-│   ├── core/                      # 配置与核心业务层
-│   ├── interface/                 # UI 抽象接口
-│   ├── models/                    # Pydantic 数据模型
-│   ├── storage/                   # 可插拔存储接口
-│   ├── ui/tui/                    # Rich 终端界面
-│   └── main.py                    # TUI 程序入口
-├── docs/
-│   ├── Step1-项目初始化教学文档.md
-│   └── 需求变更与扩展登记.md
-├── .env.example                   # 可提交的环境变量模板
-└── .gitignore
-```
-
-`data/`、`logs/`、`.env` 与 `.venv/` 均为本地运行产物，不应提交到 Git。
+- Python `>=3.10,<3.13`；项目锁定环境当前使用 Python 3.12
+- [uv](https://docs.astral.sh/uv/)
+- 调用真实模型时需要 OpenAI-compatible API Key
+- prod 或手动切换 MySQL 时需要可访问的 MySQL 服务
 
 ## 快速开始
 
-安装 [uv](https://docs.astral.sh/uv/) 后，在项目根目录执行：
+在项目根目录执行：
 
 ```powershell
 uv sync
+Copy-Item .env.dev.example .env.dev
+# 编辑 .env.dev，填写 API_BASE_URL、API_KEY 和 MODEL_NAME
+$env:APP_ENV = "dev"
 uv run python src/main.py
 ```
 
-PowerShell 环境切换示例：
+如果没有配置真实 API Key，菜单、用户、预设、会话和存储功能仍可使用；实际发送对话时模型
+调用会失败。真实 `.env*`、`data/` 和 `logs/` 均已被 Git 忽略。
+
+## 多环境配置
+
+最终配置按以下顺序生成：
+
+```text
+config.yaml + config.{APP_ENV}.yaml
+```
+
+敏感信息从对应的 `.env.{APP_ENV}` 加载。`APP_ENV` 默认是 `dev`，仅接受 `dev`、`test`、
+`prod`。为兼容早期项目，只有 dev 在 `.env.dev` 不存在时允许回退到 `.env`；test/prod
+不会读取普通 `.env`。
+
+| 环境 | 覆盖配置 | 敏感配置 | 默认存储 | 数据/导出位置 |
+|---|---|---|---|---|
+| dev | `config.dev.yaml` | `.env.dev` | SQLite | `data/dev/` |
+| test | `config.test.yaml` | `.env.test` | SQLite | `data/test/` |
+| prod | `config.prod.yaml` | `.env.prod` | MySQL | MySQL + `data/prod/exports/` |
+
+PowerShell 切换示例：
 
 ```powershell
-$env:APP_ENV = "dev"   # 也可使用 test 或 prod
+$env:APP_ENV = "test"
+uv run pytest
+
+$env:APP_ENV = "prod"
+uv run python scripts/init_db.py
 uv run python src/main.py
 ```
 
-配置按 `config.yaml + config.{APP_ENV}.yaml` 深度合并。敏感信息分别放在 `.env.dev`、
-`.env.test`、`.env.prod`（从对应 `.example` 复制）；test/prod 不会回退读取普通 `.env`。
-默认 dev 与 test 使用不同 SQLite 文件，prod 使用 MySQL。
+prod 启动前应从 `.env.prod.example` 创建 `.env.prod`，并填写正式 API Key 和
+`MYSQL_PASSWORD`。MySQL 主机、端口、用户和库名在 `config.yaml` 的 `storage.mysql` 中配置。
 
-入口会加载 `.env` 与 `config.yaml`，随后显示 Step 2 主菜单。选择“退出”可安全结束程序。
+## TUI 使用说明
 
-启动已有聊天应用：
+主菜单提供用户、会话、预设、对话、搜索和设置功能。首次使用建议：
+
+1. 在“用户管理”中创建用户；第一个用户会自动成为当前用户。
+2. 在“预设管理”中选择内置预设，或创建个人预设。
+3. 选择“开始对话”；首轮会自动创建并保存会话。
+4. 从“会话管理”加载、重命名、删除、查看或导出历史会话。
+
+对话内命令：
+
+| 命令 | 作用 |
+|---|---|
+| `/help` | 显示命令帮助 |
+| `/new` | 新建会话并清空当前上下文 |
+| `/rename 新标题` | 修改当前会话标题 |
+| `/model 模型名` | 切换当前会话模型并保留历史 |
+| `/export` | 导出当前会话为 Markdown |
+| `/exit` | 返回主菜单 |
+
+模型名必须存在于 `config.yaml` 的 `models.available` 白名单。
+
+## 存储后端
+
+存储由当前环境覆盖配置中的 `storage.type` 选择：
+
+```yaml
+storage:
+  type: sqlite  # sqlite | mysql | file
+```
+
+- SQLite：默认开发/测试后端，由 `aiosqlite` 异步访问。
+- MySQL：生产后端，由 `aiomysql` 异步访问；`scripts/init_db.py` 会创建数据库和表。
+- File：将完整数据保存为原子替换的 `store.json`，适合演示和轻量部署。
+
+业务层仅依赖 `StorageBackend`，切换后端不需要修改用户、预设或会话逻辑。
+
+## 测试与质量检查
+
+```powershell
+$env:APP_ENV = "test"
+uv run pytest
+uv run pytest --cov=src --cov-report=term-missing
+uv lock --check
+uv run python -m compileall -q src tests scripts examples
+```
+
+当前基线为 `13 passed`。SQLite 和 File 后端会在临时目录中执行相同的 CRUD、搜索、权限和
+级联测试；ChatEngine 使用假模型，不访问网络或消耗 API Key。MySQL 已完成接口、建表 SQL 和
+工厂构造验证，真实连接验收需要外部 MySQL 实例。
+
+## 项目结构
+
+```text
+Chatbot/
+├── config.yaml / config.{dev,test,prod}.yaml
+├── .env.example / .env.{dev,test,prod}.example
+├── config/                         # 内置预设与日志配置
+├── src/
+│   ├── core/                       # 配置、日志、对话与领域业务
+│   ├── interface/                  # UI 协议及扩展接口
+│   ├── models/                     # Pydantic 数据模型
+│   ├── storage/                    # 抽象接口、工厂与三种后端
+│   ├── ui/tui/                     # Rich + prompt_toolkit TUI
+│   └── main.py                     # 主线应用入口
+├── scripts/init_db.py              # 当前环境数据库初始化
+├── tests/                          # 13 项离线测试
+├── examples/                       # 三种 LLM 调用层次示例
+├── docs/                           # 需求、架构、状态和 Step 教学文档
+├── app.py                          # 早期 Streamlit 兼容入口
+├── pyproject.toml
+└── uv.lock
+```
+
+## 早期 Streamlit 入口
+
+如需运行保留的旧版 Web 应用：
 
 ```powershell
 Copy-Item .env.example .env
-# 编辑 .env，填入你自己的 API Key；不要提交该文件
+# 按 .env.example 填写旧入口使用的 OPENAI_* 等变量
 uv run streamlit run app.py
 ```
 
-Streamlit 默认会提供本地访问地址，通常为 `http://localhost:8501`。
+旧入口默认使用 `data/chatbot.db`；主线 dev SQLite 使用 `data/dev/sqlite/app.db`，两者互不覆盖。
 
-## 配置说明
-
-- `.env`：本地敏感信息，只在本机保存；从 `.env.example` 复制后填写真实值。
-- `.env.example`：无真实密钥的变量模板，可提交到 Git。
-- `config.yaml`：项目名、模型、存储、LLM、会话标题和导出等全局业务配置。
-- `config/presets.yaml`：系统内置 Prompt 预设数据。
-- `config/logging.yaml`：控制台、滚动文件和第三方库日志级别。
-- `config/settings.py`：现有 chatbot 代码当前使用的环境变量加载逻辑，Step 1 保持不变。
-
-多环境覆盖机制只以注释和需求登记形式预留，当前阶段不加载
-`config.dev.yaml`、`config.test.yaml` 或 `config.prod.yaml`。
-
-## 开发步骤
-
-1. 执行 `uv sync` 创建或同步项目虚拟环境。
-2. 复制 `.env.example` 为 `.env`，仅在需要调用模型时填写真实密钥。
-3. 执行 `uv run python src/main.py` 验证 Step 2 TUI 主菜单。
-4. 执行 `uv run streamlit run app.py` 验证原有聊天功能。
-5. 修改后运行 `git status`，确认 `.env`、`.venv/`、`data/` 和 `logs/` 未进入提交。
-
-`pyproject.toml` 已保留 pytest 与 Ruff 的工具配置；对应开发依赖可在后续测试阶段按需加入，
-Step 1 不额外安装它们。
-
-## 文档列表
+## 文档与版本里程碑
 
 - [需求说明](docs/需求说明文档.md)
 - [实施步骤计划](docs/实施步骤计划.md)
 - [系统架构](docs/architecture.md)
-- [实施状态](docs/implementation-status.md)
-- [Step 1 项目初始化教学文档](docs/Step1-项目初始化教学文档.md)
+- [实施与验收状态](docs/implementation-status.md)
 - [需求变更与扩展登记](docs/需求变更与扩展登记.md)
+- `docs/Step1-...` 至 `docs/Step9-...`：对应阶段的历史教学手册，代码片段保留当时状态
 
-## 依赖说明
+Git 已建立 `step-1-init` 至 `step-15-envs` 共 15 个里程碑标签，可按标签查看每一步快照。
 
-原项目的 `streamlit`、`langchain`、`langchain-openai` 和 `python-dotenv` 均为现有聊天功能
-所需，因此全部保留并同步到 `pyproject.toml`。`requirements.txt` 暂时保留，避免破坏已有安装
-流程；后续依赖变更以 `pyproject.toml` 和 `uv.lock` 为准。
+## 当前限制与扩展点
+
+- MySQL 真实连通性依赖外部服务，当前本地验收使用构造模拟。
+- WebUI、多模型并行对比、图文、语音和 Tool Calling 已在 `AbstractUI` 中预留接口，尚未实现。
+- `requirements.txt` 仅为旧入口兼容文件；主线依赖以 `pyproject.toml` 和 `uv.lock` 为准。

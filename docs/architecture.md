@@ -14,7 +14,7 @@ flowchart TD
     Contract --> MySQL["MySQL / aiomysql"]
     Contract --> File["JSON File / 原子替换"]
     Engine --> LLM["OpenAI-compatible LLM"]
-    Config[".env + config.yaml"] --> UI
+    Config[".env.{env} + config.yaml + 环境覆盖"] --> UI
     Config --> Engine
     Config --> Contract
 ```
@@ -60,3 +60,14 @@ Token。所有持久化均通过抽象接口完成。
 
 `AbstractUI` 已提供 capability 查询、多模型并行、附件、语音、Tool Calling 确认方法。
 未来 WebUI 实现同一接口；新存储后端实现 `StorageBackend` 后注册到 `StorageFactory` 即可。
+
+## 运行与验证入口
+
+| 入口 | 用途 |
+|---|---|
+| `uv run python src/main.py` | 启动当前环境的主线 TUI |
+| `uv run python scripts/init_db.py` | 初始化当前环境的存储后端 |
+| `APP_ENV=test uv run pytest` | 运行离线测试套件 |
+| `uv run streamlit run app.py` | 启动保留的早期 Streamlit 应用 |
+
+MySQL 真实连通性属于部署环境验收项；本地交付仅验证了后端契约、建表 SQL 和工厂构造。

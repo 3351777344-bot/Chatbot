@@ -11,6 +11,9 @@ Step 7 已将无状态 ChatEngine、会话历史与 TUI 对话视图打通：每
 Step 10 起可从会话菜单导出 Markdown；对话中使用 `/model 模型名` 切换当前会话模型，
 使用 `/export` 导出当前会话。设置菜单可修改当前用户后续新会话的默认模型。
 
+切换 MySQL：将 `storage.type` 设为 `mysql`，在 `storage.mysql` 配置主机、端口、用户和库名，
+并通过 `.env` 的 `MYSQL_PASSWORD` 提供密码；`scripts/init_db.py` 会创建库表。
+
 ## 项目特性
 
 - 基于 LangChain 调用 OpenAI-compatible 大模型接口

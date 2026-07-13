@@ -15,6 +15,7 @@ dependencies = [
     "rich>=15.0.0",
     "prompt-toolkit>=3.0.52",
     "aiosqlite>=0.22.1",
+    "aiomysql>=0.3.2",
 ]
 
 [tool.uv]

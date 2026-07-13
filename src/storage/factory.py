@@ -14,8 +14,11 @@ class StorageFactory:
 
             return SQLiteBackend(config.get("storage", "sqlite", "path", default="data/sqlite/app.db"))
         if backend_type == "mysql":
-            raise NotImplementedError("MySQL 后端将在 Step 11 实现")
+            from storage.mysql_backend import MySQLBackend
+
+            return MySQLBackend(
+                config.get("storage", "mysql", default={}), config.secret.MYSQL_PASSWORD
+            )
         if backend_type == "file":
             raise NotImplementedError("File 后端将在 Step 12 实现")
         raise ValueError(f"不支持的存储类型: {backend_type}")
-

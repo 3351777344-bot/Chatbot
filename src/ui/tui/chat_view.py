@@ -21,7 +21,7 @@ async def start_chat(app) -> None:
                 return
             continue
 
-        first_turn = not await app.backend.list_messages(app.current_session.id)
+        first_turn = not await app.session_manager.has_messages(app.current_session.id)
         await app.session_manager.add_message(app.current_session, "human", user_input)
         history = await app.session_manager.load_messages_as_langchain(app.current_session.id)
         if app.current_preset:

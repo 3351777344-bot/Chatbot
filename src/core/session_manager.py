@@ -46,6 +46,9 @@ class SessionManager:
     async def load_messages_as_langchain(self, session_id: int) -> list[BaseMessage]:
         return [self._to_langchain(message) for message in await self.backend.list_messages(session_id)]
 
+    async def has_messages(self, session_id: int) -> bool:
+        return bool(await self.backend.list_messages(session_id))
+
     async def generate_title(self, first_user_input: str, engine) -> str:
         prompt = [
             SystemMessage(content="请用简短中文概括用户意图作为对话标题，只输出标题。"),
@@ -68,6 +71,27 @@ class SessionManager:
     def _fallback_title(self, text: str) -> str:
         limit = self.config.title_max_length
         return text[:limit] + ("..." if len(text) > limit else "")
+
+    async def list_sessions(self, user_id: int) -> list[Session]:
+        return await self.backend.list_sessions(user_id)
+
+    async def get_session(self, session_id: int, user_id: int | None = None) -> Session | None:
+        session = await self.backend.get_session(session_id)
+        if session is not None and user_id is not None and session.user_id != user_id:
+            return None
+        return session
+
+    async def rename_session(self, session_id: int, new_title: str, user_id: int | None = None) -> None:
+        session = await self.get_session(session_id, user_id)
+        if session is None:
+            raise ValueError("会话不存在或无权访问")
+        await self.update_title(session, new_title)
+
+    async def delete_session(self, session_id: int, user_id: int | None = None) -> None:
+        session = await self.get_session(session_id, user_id)
+        if session is None:
+            raise ValueError("会话不存在或无权访问")
+        await self.backend.delete_session(session_id)
 
     @staticmethod
     def _to_langchain(message: Message) -> BaseMessage:

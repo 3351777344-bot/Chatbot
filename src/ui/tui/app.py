@@ -15,6 +15,7 @@ from ui.tui.chat_view import start_chat
 MAIN_MENU_OPTIONS = ["用户管理", "会话管理", "预设管理", "开始对话", "设置", "关于", "退出"]
 USER_MENU_OPTIONS = ["创建用户", "列出所有用户", "切换当前用户", "删除用户", "返回主菜单"]
 PRESET_MENU_OPTIONS = ["浏览预设", "选择预设", "新建自定义预设", "编辑自定义预设", "删除自定义预设", "返回主菜单"]
+SESSION_MENU_OPTIONS = ["列出会话", "加载会话", "新建会话", "重命名会话", "删除会话", "返回主菜单"]
 
 
 class TUIApp(AbstractUI):
@@ -58,7 +59,7 @@ class TUIApp(AbstractUI):
             if choice == 0:
                 await self._show_user_menu()
             elif choice == 1:
-                menu_view.show_session_menu()
+                await self._show_session_menu()
             elif choice == 2:
                 await self._show_preset_menu()
             elif choice == 3:
@@ -221,3 +222,74 @@ class TUIApp(AbstractUI):
         if self.current_preset and self.current_preset.id == preset_id:
             self.current_preset = None
         widgets.print_success("预设已删除")
+
+    async def _show_session_menu(self) -> None:
+        if self.current_user is None:
+            widgets.print_warning("请先创建或切换用户")
+            return
+        while True:
+            choice = await self.display_menu("会话管理", SESSION_MENU_OPTIONS)
+            if choice in (-1, 5):
+                return
+            try:
+                if choice == 0:
+                    await self._list_sessions()
+                elif choice == 1:
+                    await self._load_session()
+                elif choice == 2:
+                    await self._new_session()
+                elif choice == 3:
+                    await self._rename_session()
+                elif choice == 4:
+                    await self._delete_session()
+            except (ValueError, TypeError) as exc:
+                widgets.print_error(str(exc))
+
+    async def _list_sessions(self) -> list:
+        sessions = await self.session_manager.list_sessions(self.current_user.id)
+        for session in sessions:
+            current = " <- 当前" if self.current_session and session.id == self.current_session.id else ""
+            widgets.console.print(
+                f"  id={session.id} [cyan]{session.title}[/] 模型={session.model_name} "
+                f"Token={session.total_prompt_tokens + session.total_completion_tokens}{current}"
+            )
+        widgets.print_info(f"共 {len(sessions)} 个会话")
+        return sessions
+
+    async def _load_session(self) -> None:
+        await self._list_sessions()
+        session_id = int(await self.get_user_input("要加载的会话 id"))
+        session = await self.session_manager.get_session(session_id, self.current_user.id)
+        if session is None:
+            raise ValueError("会话不存在或无权访问")
+        self.current_session = session
+        self.current_preset = (
+            await self.preset_manager.get_preset(session.preset_id) if session.preset_id else None
+        )
+        widgets.print_success(f"已加载会话: {session.title}")
+
+    async def _new_session(self) -> None:
+        model = self.current_user.default_model or self.config.default_model
+        self.current_session = await self.session_manager.create_session(
+            self.current_user.id, model, self.current_preset.id if self.current_preset else None
+        )
+        widgets.print_success(f"已新建会话（id={self.current_session.id}）")
+
+    async def _rename_session(self) -> None:
+        session_id = int(await self.get_user_input("要重命名的会话 id"))
+        title = await self.get_user_input("新标题")
+        await self.session_manager.rename_session(session_id, title, self.current_user.id)
+        if self.current_session and self.current_session.id == session_id:
+            self.current_session.title = title[: self.config.title_max_length]
+        widgets.print_success("会话已重命名")
+
+    async def _delete_session(self) -> None:
+        session_id = int(await self.get_user_input("要删除的会话 id"))
+        confirm = await self.get_user_input("输入 yes 确认删除")
+        if confirm.lower() != "yes":
+            widgets.print_info("已取消删除")
+            return
+        await self.session_manager.delete_session(session_id, self.current_user.id)
+        if self.current_session and self.current_session.id == session_id:
+            self.current_session = None
+        widgets.print_success("会话及其消息已删除")

@@ -81,6 +81,17 @@ uv sync
 uv run python src/main.py
 ```
 
+PowerShell 环境切换示例：
+
+```powershell
+$env:APP_ENV = "dev"   # 也可使用 test 或 prod
+uv run python src/main.py
+```
+
+配置按 `config.yaml + config.{APP_ENV}.yaml` 深度合并。敏感信息分别放在 `.env.dev`、
+`.env.test`、`.env.prod`（从对应 `.example` 复制）；test/prod 不会回退读取普通 `.env`。
+默认 dev 与 test 使用不同 SQLite 文件，prod 使用 MySQL。
+
 入口会加载 `.env` 与 `config.yaml`，随后显示 Step 2 主菜单。选择“退出”可安全结束程序。
 
 启动已有聊天应用：

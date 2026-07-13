@@ -20,6 +20,9 @@ htmlcov/
 .env.prod
 .env.*.local
 !.env.example
+!.env.dev.example
+!.env.test.example
+!.env.prod.example
 
 # Runtime data and logs
 data/

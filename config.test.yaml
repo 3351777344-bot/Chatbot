@@ -1,0 +1,13 @@
+app:
+  env: test
+models:
+  default: test-model
+storage:
+  type: sqlite
+  sqlite:
+    path: data/test/sqlite/app.db
+llm:
+  timeout: 5
+  max_retries: 0
+export:
+  dir: data/test/exports

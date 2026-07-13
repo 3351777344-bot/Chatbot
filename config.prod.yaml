@@ -1,0 +1,11 @@
+app:
+  env: prod
+models:
+  default: deepseek-chat
+storage:
+  type: mysql
+llm:
+  timeout: 30
+  max_retries: 3
+export:
+  dir: data/prod/exports

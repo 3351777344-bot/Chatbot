@@ -44,6 +44,18 @@ Token。所有持久化均通过抽象接口完成。
 - SQLite 使用外键级联；MySQL 使用 InnoDB 外键；File 后端在事务锁内手动级联并原子替换。
 - 日志不记录 API Key 和数据库密码。
 
+## 多环境配置
+
+`AppConfig` 先加载共享 `config.yaml`，再以 `config.dev.yaml`、`config.test.yaml` 或
+`config.prod.yaml` 深度覆盖。`APP_ENV` 默认是 dev，只接受 dev/test/prod。密钥从同名
+`.env.{env}` 加载；仅 dev 为兼容旧项目，在 `.env.dev` 不存在时允许读取 `.env`。
+
+| 环境 | 默认存储 | 数据源 |
+|---|---|---|
+| dev | SQLite | `data/dev/sqlite/app.db` |
+| test | SQLite | `data/test/sqlite/app.db` |
+| prod | MySQL | `storage.mysql` + `.env.prod` 密码 |
+
 ## 扩展点
 
 `AbstractUI` 已提供 capability 查询、多模型并行、附件、语音、Tool Calling 确认方法。

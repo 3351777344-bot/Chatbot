@@ -1,0 +1,12 @@
+app:
+  env: dev
+models:
+  default: deepseek-chat
+storage:
+  type: sqlite
+  sqlite:
+    path: data/dev/sqlite/app.db
+llm:
+  timeout: 60
+export:
+  dir: data/dev/exports

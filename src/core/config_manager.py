@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Any
+import os
 
 import yaml
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -23,10 +24,21 @@ class SecretConfig(BaseSettings):
 
 
 class AppConfig:
-    def __init__(self, config_path: Path | None = None) -> None:
-        self.secret = SecretConfig()
+    ALLOWED_ENVS = {"dev", "test", "prod"}
+
+    def __init__(self, config_path: Path | None = None, app_env: str | None = None) -> None:
+        self.app_env = (app_env or os.getenv("APP_ENV", "dev")).lower().strip()
+        if self.app_env not in self.ALLOWED_ENVS:
+            raise ValueError(f"APP_ENV 必须是 dev/test/prod，实际为: {self.app_env}")
+        environment_file = PROJECT_ROOT / f".env.{self.app_env}"
+        if not environment_file.exists() and self.app_env == "dev":
+            environment_file = PROJECT_ROOT / ".env"
+        self.secret = SecretConfig(_env_file=environment_file if environment_file.exists() else None)
         self.config_path = config_path or PROJECT_ROOT / "config.yaml"
         self._yaml_config = self._load_yaml(self.config_path)
+        if config_path is None:
+            override = self._load_yaml(PROJECT_ROOT / f"config.{self.app_env}.yaml")
+            self._yaml_config = self._deep_merge(self._yaml_config, override)
 
     @staticmethod
     def _load_yaml(path: Path) -> dict[str, Any]:
@@ -35,6 +47,16 @@ class AppConfig:
         with path.open("r", encoding="utf-8") as file:
             data = yaml.safe_load(file)
         return data if isinstance(data, dict) else {}
+
+    @classmethod
+    def _deep_merge(cls, base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+        result = dict(base)
+        for key, value in override.items():
+            if isinstance(value, dict) and isinstance(result.get(key), dict):
+                result[key] = cls._deep_merge(result[key], value)
+            else:
+                result[key] = value
+        return result
 
     @property
     def storage_type(self) -> str:

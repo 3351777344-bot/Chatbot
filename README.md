@@ -1,9 +1,8 @@
 # langchain-chat
 
-`langchain-chat` 是一个基于 LangChain 的课程实践聊天机器人项目。仓库保留了已有的
-Streamlit 聊天界面、多轮会话与 SQLite 持久化功能。目前已完成 Step 2：在 `src/` 下新增
-分层数据模型、异步 SQLite 存储、配置管理和可交互 TUI；Step 4 已支持创建、列出、切换
-和安全删除用户，并支持内置及用户私有 Prompt 预设的选择与管理。原有 Web 应用仍可独立运行。
+`langchain-chat` 是基于 LangChain 的异步多用户聊天系统。主线应用提供 TUI、多轮流式对话、
+Prompt 预设、历史管理与搜索、Markdown 导出、模型切换，以及 SQLite/MySQL/File 可插拔存储。
+仓库原有 Streamlit 入口仍保留，可独立运行。
 
 Step 7 已将无状态 ChatEngine、会话历史与 TUI 对话视图打通：每轮消息自动保存，历史会
 自动注入上下文，终端逐段显示回复并累计 Token 用量。
@@ -119,6 +118,10 @@ Step 1 不额外安装它们。
 
 ## 文档列表
 
+- [需求说明](docs/需求说明文档.md)
+- [实施步骤计划](docs/实施步骤计划.md)
+- [系统架构](docs/architecture.md)
+- [实施状态](docs/implementation-status.md)
 - [Step 1 项目初始化教学文档](docs/Step1-项目初始化教学文档.md)
 - [需求变更与扩展登记](docs/需求变更与扩展登记.md)
 

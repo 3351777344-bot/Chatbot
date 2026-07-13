@@ -16,7 +16,8 @@
 | Step 10 导出与模型切换 | 已验收 | Markdown 导出、默认模型和会话模型白名单切换测试 | `step-10-export-switch` |
 | Step 11 MySQL 后端 | 已实现 | 全接口/建表 SQL/工厂构造验证；真实连接需外部 MySQL | `step-11-mysql` |
 | Step 12 File 后端与日志 | 已验收 | File 全 CRUD/重载/级联测试；JSON 日志解析测试 | `step-12-logging-file` |
-| Step 13 单元测试 | 已实现 | `uv run pytest` | `step-13-tests`（提交后创建） |
-| Step 14–15 | 待实施 | 见《实施步骤计划》 | 待创建 |
+| Step 13 单元测试 | 已验收 | `uv run pytest`（10 passed） | `step-13-tests` |
+| Step 14 文档与扩展预留 | 已实现 | README/架构文档链接及 UI 扩展协议导入检查 | `step-14-docs-extend`（提交后创建） |
+| Step 15 | 待实施 | 见《实施步骤计划》 | 待创建 |
 
 最后更新：2026-07-13。

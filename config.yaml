@@ -1,7 +1,7 @@
 app:
   name: langchain-chat
   version: 0.1.0
-  current_step: "Step 2  数据模型与 TUI 骨架"
+  current_step: "Step 3  SQLite 存储后端"
   # Multi-environment extension point (REQ-001):
   # env: dev
   # Future loaders may merge config.yaml with config.{env}.yaml.
@@ -21,7 +21,8 @@ models:
 storage:
   type: sqlite
   sqlite:
-    path: data/chatbot.db
+    # 与旧 Streamlit 应用的 data/chatbot.db 隔离，避免同名表结构冲突。
+    path: data/sqlite/app.db
   mysql:
     host: localhost
     port: 3306

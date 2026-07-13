@@ -16,6 +16,7 @@ dependencies = [
     "prompt-toolkit>=3.0.52",
     "aiosqlite>=0.22.1",
     "aiomysql>=0.3.2",
+    "python-json-logger>=4.1.0",
 ]
 
 [tool.uv]

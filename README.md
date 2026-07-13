@@ -14,6 +14,9 @@ Step 10 起可从会话菜单导出 Markdown；对话中使用 `/model 模型名
 切换 MySQL：将 `storage.type` 设为 `mysql`，在 `storage.mysql` 配置主机、端口、用户和库名，
 并通过 `.env` 的 `MYSQL_PASSWORD` 提供密码；`scripts/init_db.py` 会创建库表。
 
+将 `storage.type` 设为 `file` 可使用 JSON 文件后端，数据目录由 `storage.file.dir/path` 指定。
+应用日志同时输出到控制台和 `logs/langchain-chat.log`，文件内容为便于采集的 JSON Lines。
+
 ## 项目特性
 
 - 基于 LangChain 调用 OpenAI-compatible 大模型接口

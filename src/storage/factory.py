@@ -20,5 +20,7 @@ class StorageFactory:
                 config.get("storage", "mysql", default={}), config.secret.MYSQL_PASSWORD
             )
         if backend_type == "file":
-            raise NotImplementedError("File 后端将在 Step 12 实现")
+            from storage.file_backend import FileBackend
+            directory=config.get("storage","file","path",default=None) or config.get("storage","file","dir",default="data/filestore")
+            return FileBackend(directory)
         raise ValueError(f"不支持的存储类型: {backend_type}")

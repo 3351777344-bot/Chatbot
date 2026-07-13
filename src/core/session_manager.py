@@ -49,6 +49,13 @@ class SessionManager:
     async def has_messages(self, session_id: int) -> bool:
         return bool(await self.backend.list_messages(session_id))
 
+    async def get_session_messages(self, session_id: int) -> list[Message]:
+        return await self.backend.list_messages(session_id)
+
+    async def search_messages(self, user_id: int, keyword: str) -> list[Message]:
+        keyword = keyword.strip()
+        return await self.backend.search_messages(user_id, keyword) if keyword else []
+
     async def generate_title(self, first_user_input: str, engine) -> str:
         prompt = [
             SystemMessage(content="请用简短中文概括用户意图作为对话标题，只输出标题。"),

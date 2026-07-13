@@ -12,10 +12,10 @@ from storage.base import StorageBackend
 from ui.tui import menu_view, widgets
 from ui.tui.chat_view import start_chat
 
-MAIN_MENU_OPTIONS = ["用户管理", "会话管理", "预设管理", "开始对话", "设置", "关于", "退出"]
+MAIN_MENU_OPTIONS = ["用户管理", "会话管理", "预设管理", "开始对话", "搜索对话", "设置", "关于", "退出"]
 USER_MENU_OPTIONS = ["创建用户", "列出所有用户", "切换当前用户", "删除用户", "返回主菜单"]
 PRESET_MENU_OPTIONS = ["浏览预设", "选择预设", "新建自定义预设", "编辑自定义预设", "删除自定义预设", "返回主菜单"]
-SESSION_MENU_OPTIONS = ["列出会话", "加载会话", "新建会话", "重命名会话", "删除会话", "返回主菜单"]
+SESSION_MENU_OPTIONS = ["列出会话", "加载会话", "新建会话", "重命名会话", "删除会话", "查看会话记录", "返回主菜单"]
 
 
 class TUIApp(AbstractUI):
@@ -68,10 +68,12 @@ class TUIApp(AbstractUI):
                 else:
                     await start_chat(self)
             elif choice == 4:
-                menu_view.show_settings_menu()
+                await self._search_messages()
             elif choice == 5:
-                menu_view.show_about()
+                menu_view.show_settings_menu()
             elif choice == 6:
+                menu_view.show_about()
+            elif choice == 7:
                 widgets.print_info("感谢使用，再见。")
                 break
 
@@ -106,7 +108,7 @@ class TUIApp(AbstractUI):
     async def _create_user(self) -> None:
         username = await self.get_user_input("请输入新用户名")
         try:
-            user = await self.user_manager.create_user(username, get_config().default_model)
+            user = await self.user_manager.create_user(username, get_config().secret.MODEL_NAME)
             widgets.print_success(f"用户创建成功: {user.username}（id={user.id}）")
             if self.current_user is None:
                 self.current_user = user
@@ -229,7 +231,7 @@ class TUIApp(AbstractUI):
             return
         while True:
             choice = await self.display_menu("会话管理", SESSION_MENU_OPTIONS)
-            if choice in (-1, 5):
+            if choice in (-1, 6):
                 return
             try:
                 if choice == 0:
@@ -242,6 +244,8 @@ class TUIApp(AbstractUI):
                     await self._rename_session()
                 elif choice == 4:
                     await self._delete_session()
+                elif choice == 5:
+                    await self._view_session_messages()
             except (ValueError, TypeError) as exc:
                 widgets.print_error(str(exc))
 
@@ -293,3 +297,36 @@ class TUIApp(AbstractUI):
         if self.current_session and self.current_session.id == session_id:
             self.current_session = None
         widgets.print_success("会话及其消息已删除")
+
+    async def _view_session_messages(self) -> None:
+        session_id = int(await self.get_user_input("要查看的会话 id"))
+        session = await self.session_manager.get_session(session_id, self.current_user.id)
+        if session is None:
+            raise ValueError("会话不存在或无权访问")
+        messages = await self.session_manager.get_session_messages(session_id)
+        widgets.console.print(f"[bold]{session.title}[/] 的记录")
+        for message in messages:
+            label = {"human": "你", "ai": "AI", "system": "系统"}[message.role]
+            widgets.console.print(f"[bold]{label}[/]: {message.content}")
+        widgets.print_info(f"共 {len(messages)} 条消息")
+
+    async def _search_messages(self) -> None:
+        if self.current_user is None:
+            widgets.print_warning("请先创建或切换用户")
+            return
+        keyword = await self.get_user_input("搜索关键词")
+        results = await self.session_manager.search_messages(self.current_user.id, keyword)
+        if not results:
+            widgets.print_info("没有匹配的消息")
+            return
+        sessions = {s.id: s for s in await self.session_manager.list_sessions(self.current_user.id)}
+        grouped: dict[int, list] = {}
+        for message in results:
+            grouped.setdefault(message.session_id, []).append(message)
+        for session_id, messages in grouped.items():
+            title = sessions.get(session_id).title if session_id in sessions else f"会话 {session_id}"
+            widgets.console.print(f"\n[bold cyan]{title}[/]（id={session_id}）")
+            for message in messages:
+                label = {"human": "你", "ai": "AI", "system": "系统"}[message.role]
+                widgets.console.print(f"  [{label}] {message.content}")
+        widgets.print_info(f"找到 {len(results)} 条匹配消息")

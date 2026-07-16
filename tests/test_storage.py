@@ -8,7 +8,9 @@ from storage.mysql_backend import MySQLBackend
 async def test_storage_crud_search_and_cascade(backend):
     user = await backend.create_user(User(username="alice", default_model="m1"))
     preset = await backend.save_preset(Preset(user_id=user.id, name="p", system_prompt="s"))
-    session = await backend.create_session(Session(user_id=user.id, title="t", model_name="m1", preset_id=preset.id))
+    session = await backend.create_session(
+        Session(user_id=user.id, title="t", model_name="m1", preset_id=preset.id)
+    )
     await backend.add_message(Message(session_id=session.id, role="human", content="Needle text"))
     await backend.set_user_config(UserConfig(user_id=user.id, key="theme", value="dark"))
     assert (await backend.get_user_by_name("alice")).id == user.id

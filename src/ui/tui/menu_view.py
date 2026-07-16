@@ -21,4 +21,3 @@ def show_settings_menu() -> None:
 
 def show_about() -> None:
     widgets.console.print("[bold cyan]LangChain Chat[/] - 当前进度：Step 2 TUI 骨架")
-

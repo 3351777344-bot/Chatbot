@@ -1,8 +1,8 @@
 """加载环境变量和 YAML 业务配置。"""
 
+import os
 from pathlib import Path
 from typing import Any
-import os
 
 import yaml
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -27,13 +27,15 @@ class AppConfig:
     ALLOWED_ENVS = {"dev", "test", "prod"}
 
     def __init__(self, config_path: Path | None = None, app_env: str | None = None) -> None:
-        self.app_env = (app_env or os.getenv("APP_ENV", "dev")).lower().strip()
+        self.app_env = str(app_env or os.getenv("APP_ENV", "dev")).lower().strip()
         if self.app_env not in self.ALLOWED_ENVS:
             raise ValueError(f"APP_ENV 必须是 dev/test/prod，实际为: {self.app_env}")
         environment_file = PROJECT_ROOT / f".env.{self.app_env}"
         if not environment_file.exists() and self.app_env == "dev":
             environment_file = PROJECT_ROOT / ".env"
-        self.secret = SecretConfig(_env_file=environment_file if environment_file.exists() else None)
+        self.secret = SecretConfig(
+            _env_file=environment_file if environment_file.exists() else None  # type: ignore[call-arg]
+        )
         self.config_path = config_path or PROJECT_ROOT / "config.yaml"
         self._yaml_config = self._load_yaml(self.config_path)
         if config_path is None:

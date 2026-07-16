@@ -2,18 +2,13 @@
 
 import asyncio
 import logging
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
 
 async def async_main() -> None:
-    from core.logging_config import setup_logging
-    from core.config_manager import get_config
-    from storage.factory import StorageFactory
-    from core.preset_manager import PresetManager
     from core.chat_engine import ChatEngine
+    from core.config_manager import get_config
+    from core.logging_config import setup_logging
+    from core.preset_manager import PresetManager
+    from storage.factory import StorageFactory
     from ui.tui.app import TUIApp
 
     setup_logging()

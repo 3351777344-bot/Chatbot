@@ -2,30 +2,55 @@
 
 import platform
 
-from interface.ui_protocol import AbstractUI
+from core.chat_engine import ChatEngine
 from core.config_manager import get_config
-from core.user_manager import UserManager
 from core.preset_manager import PresetManager
 from core.session_manager import SessionManager
-from core.chat_engine import ChatEngine
+from core.user_manager import UserManager
+from interface.ui_protocol import AbstractUI
 from storage.base import StorageBackend
 from ui.tui import menu_view, widgets
 from ui.tui.chat_view import start_chat
 
-MAIN_MENU_OPTIONS = ["用户管理", "会话管理", "预设管理", "开始对话", "搜索对话", "设置", "关于", "退出"]
+MAIN_MENU_OPTIONS = [
+    "用户管理",
+    "会话管理",
+    "预设管理",
+    "开始对话",
+    "搜索对话",
+    "设置",
+    "关于",
+    "退出",
+]
 USER_MENU_OPTIONS = ["创建用户", "列出所有用户", "切换当前用户", "删除用户", "返回主菜单"]
-PRESET_MENU_OPTIONS = ["浏览预设", "选择预设", "新建自定义预设", "编辑自定义预设", "删除自定义预设", "返回主菜单"]
-SESSION_MENU_OPTIONS = ["列出会话", "加载会话", "新建会话", "重命名会话", "删除会话", "查看会话记录", "导出 Markdown", "返回主菜单"]
+PRESET_MENU_OPTIONS = [
+    "浏览预设",
+    "选择预设",
+    "新建自定义预设",
+    "编辑自定义预设",
+    "删除自定义预设",
+    "返回主菜单",
+]
+SESSION_MENU_OPTIONS = [
+    "列出会话",
+    "加载会话",
+    "新建会话",
+    "重命名会话",
+    "删除会话",
+    "查看会话记录",
+    "导出 Markdown",
+    "返回主菜单",
+]
 
 
 class TUIApp(AbstractUI):
-    def __init__(self, backend: StorageBackend | None = None, chat_engine: ChatEngine | None = None) -> None:
+    def __init__(self, backend: StorageBackend, chat_engine: ChatEngine) -> None:
         self.config = get_config()
         self.backend = backend
         self.chat_engine = chat_engine
-        self.user_manager = UserManager(backend) if backend else None
-        self.preset_manager = PresetManager(backend) if backend else None
-        self.session_manager = SessionManager(backend, self.config) if backend else None
+        self.user_manager = UserManager(backend)
+        self.preset_manager = PresetManager(backend)
+        self.session_manager = SessionManager(backend, self.config)
         self.current_user = None
         self.current_session = None
         self.current_preset = None
@@ -63,10 +88,7 @@ class TUIApp(AbstractUI):
             elif choice == 2:
                 await self._show_preset_menu()
             elif choice == 3:
-                if self.chat_engine is None:
-                    widgets.print_error("对话引擎未初始化")
-                else:
-                    await start_chat(self)
+                await start_chat(self)
             elif choice == 4:
                 await self._search_messages()
             elif choice == 5:
@@ -87,9 +109,6 @@ class TUIApp(AbstractUI):
             widgets.console.print("[dim]当前用户: 未登录[/]")
 
     async def _show_user_menu(self) -> None:
-        if self.user_manager is None:
-            widgets.print_error("用户管理未初始化（存储后端未注入）")
-            return
         while True:
             widgets.print_divider()
             self._show_current_user()
@@ -178,15 +197,21 @@ class TUIApp(AbstractUI):
                 widgets.print_error(str(exc))
 
     async def _list_presets(self) -> list:
+        assert self.current_user is not None
         presets = await self.preset_manager.list_presets(self.current_user.id)
         for preset in presets:
             kind = "内置" if preset.is_builtin else "自定义"
-            selected = " <- 当前" if self.current_preset and preset.id == self.current_preset.id else ""
-            widgets.console.print(f"  id={preset.id} [{kind}] [cyan]{preset.name}[/] {preset.description}{selected}")
+            selected = (
+                " <- 当前" if self.current_preset and preset.id == self.current_preset.id else ""
+            )
+            widgets.console.print(
+                f"  id={preset.id} [{kind}] [cyan]{preset.name}[/] {preset.description}{selected}"
+            )
         widgets.print_info(f"共 {len(presets)} 个可用预设")
         return presets
 
     async def _select_preset(self) -> None:
+        assert self.current_user is not None
         await self._list_presets()
         raw = await self.get_user_input("输入预设 id，输入 0 表示不使用预设")
         if raw == "0":
@@ -200,6 +225,7 @@ class TUIApp(AbstractUI):
         widgets.print_success(f"已选择预设: {preset.name}")
 
     async def _create_preset(self) -> None:
+        assert self.current_user is not None
         preset = await self.preset_manager.create_preset(
             self.current_user.id,
             await self.get_user_input("预设名称"),
@@ -209,16 +235,22 @@ class TUIApp(AbstractUI):
         widgets.print_success(f"已创建预设: {preset.name}（id={preset.id}）")
 
     async def _edit_preset(self) -> None:
-        preset = await self.preset_manager.get_preset(int(await self.get_user_input("要编辑的预设 id")))
+        preset = await self.preset_manager.get_preset(
+            int(await self.get_user_input("要编辑的预设 id"))
+        )
         if preset is None:
             raise ValueError("预设不存在")
         name = widgets.read_text("预设名称", preset.name)
         description = widgets.read_text("预设描述", preset.description)
         prompt = widgets.read_text("系统提示词", preset.system_prompt)
-        await self.preset_manager.update_preset(preset, name, description, prompt, self.current_user.id)
+        assert self.current_user is not None
+        await self.preset_manager.update_preset(
+            preset, name, description, prompt, self.current_user.id
+        )
         widgets.print_success("预设已更新")
 
     async def _delete_preset(self) -> None:
+        assert self.current_user is not None
         preset_id = int(await self.get_user_input("要删除的预设 id"))
         await self.preset_manager.delete_preset(preset_id, self.current_user.id)
         if self.current_preset and self.current_preset.id == preset_id:
@@ -252,9 +284,12 @@ class TUIApp(AbstractUI):
                 widgets.print_error(str(exc))
 
     async def _list_sessions(self) -> list:
+        assert self.current_user is not None
         sessions = await self.session_manager.list_sessions(self.current_user.id)
         for session in sessions:
-            current = " <- 当前" if self.current_session and session.id == self.current_session.id else ""
+            current = (
+                " <- 当前" if self.current_session and session.id == self.current_session.id else ""
+            )
             widgets.console.print(
                 f"  id={session.id} [cyan]{session.title}[/] 模型={session.model_name} "
                 f"Token={session.total_prompt_tokens + session.total_completion_tokens}{current}"
@@ -263,6 +298,7 @@ class TUIApp(AbstractUI):
         return sessions
 
     async def _load_session(self) -> None:
+        assert self.current_user is not None
         await self._list_sessions()
         session_id = int(await self.get_user_input("要加载的会话 id"))
         session = await self.session_manager.get_session(session_id, self.current_user.id)
@@ -275,6 +311,7 @@ class TUIApp(AbstractUI):
         widgets.print_success(f"已加载会话: {session.title}")
 
     async def _new_session(self) -> None:
+        assert self.current_user is not None
         model = self.current_user.default_model or self.config.default_model
         self.current_session = await self.session_manager.create_session(
             self.current_user.id, model, self.current_preset.id if self.current_preset else None
@@ -282,6 +319,7 @@ class TUIApp(AbstractUI):
         widgets.print_success(f"已新建会话（id={self.current_session.id}）")
 
     async def _rename_session(self) -> None:
+        assert self.current_user is not None
         session_id = int(await self.get_user_input("要重命名的会话 id"))
         title = await self.get_user_input("新标题")
         await self.session_manager.rename_session(session_id, title, self.current_user.id)
@@ -295,12 +333,14 @@ class TUIApp(AbstractUI):
         if confirm.lower() != "yes":
             widgets.print_info("已取消删除")
             return
+        assert self.current_user is not None
         await self.session_manager.delete_session(session_id, self.current_user.id)
         if self.current_session and self.current_session.id == session_id:
             self.current_session = None
         widgets.print_success("会话及其消息已删除")
 
     async def _view_session_messages(self) -> None:
+        assert self.current_user is not None
         session_id = int(await self.get_user_input("要查看的会话 id"))
         session = await self.session_manager.get_session(session_id, self.current_user.id)
         if session is None:
@@ -326,7 +366,9 @@ class TUIApp(AbstractUI):
         for message in results:
             grouped.setdefault(message.session_id, []).append(message)
         for session_id, messages in grouped.items():
-            title = sessions.get(session_id).title if session_id in sessions else f"会话 {session_id}"
+            title = (
+                sessions.get(session_id).title if session_id in sessions else f"会话 {session_id}"
+            )
             widgets.console.print(f"\n[bold cyan]{title}[/]（id={session_id}）")
             for message in messages:
                 label = {"human": "你", "ai": "AI", "system": "系统"}[message.role]
@@ -334,6 +376,7 @@ class TUIApp(AbstractUI):
         widgets.print_info(f"找到 {len(results)} 条匹配消息")
 
     async def _export_session(self) -> None:
+        assert self.current_user is not None
         session_id = int(await self.get_user_input("要导出的会话 id"))
         path = await self.session_manager.export_markdown(
             session_id, self.current_user.username, self.current_user.id

@@ -12,7 +12,9 @@ class StorageFactory:
         if backend_type == "sqlite":
             from storage.sqlite_backend import SQLiteBackend
 
-            return SQLiteBackend(config.get("storage", "sqlite", "path", default="data/sqlite/app.db"))
+            return SQLiteBackend(
+                config.get("storage", "sqlite", "path", default="data/sqlite/app.db")
+            )
         if backend_type == "mysql":
             from storage.mysql_backend import MySQLBackend
 
@@ -21,6 +23,9 @@ class StorageFactory:
             )
         if backend_type == "file":
             from storage.file_backend import FileBackend
-            directory=config.get("storage","file","path",default=None) or config.get("storage","file","dir",default="data/filestore")
+
+            directory = config.get("storage", "file", "path", default=None) or config.get(
+                "storage", "file", "dir", default="data/filestore"
+            )
             return FileBackend(directory)
         raise ValueError(f"不支持的存储类型: {backend_type}")

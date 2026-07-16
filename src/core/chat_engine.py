@@ -12,7 +12,9 @@ from core.config_manager import AppConfig
 class ChatEngine:
     """封装同步/异步流式调用、重试配置与 Token 统计。"""
 
-    def __init__(self, config: AppConfig, llm: Any | None = None, model_name: str | None = None) -> None:
+    def __init__(
+        self, config: AppConfig, llm: Any | None = None, model_name: str | None = None
+    ) -> None:
         self.config = config
         self.model_name = model_name or config.secret.MODEL_NAME or config.default_model
         self.llm = llm or ChatOpenAI(
@@ -20,7 +22,7 @@ class ChatEngine:
             api_key=config.secret.API_KEY,
             base_url=config.secret.API_BASE_URL,
             temperature=config.temperature,
-            max_tokens=config.max_tokens,
+            max_tokens=config.max_tokens,  # type: ignore[call-arg]
             timeout=config.llm_timeout,
             max_retries=config.llm_max_retries,
             streaming=True,

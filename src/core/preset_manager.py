@@ -28,12 +28,14 @@ class PresetManager:
             prompt = str(item.get("system_prompt", "")).strip()
             if not name or not prompt or name in existing:
                 continue
-            await self.backend.save_preset(Preset(
-                name=name,
-                description=str(item.get("description", "")).strip(),
-                system_prompt=prompt,
-                is_builtin=True,
-            ))
+            await self.backend.save_preset(
+                Preset(
+                    name=name,
+                    description=str(item.get("description", "")).strip(),
+                    system_prompt=prompt,
+                    is_builtin=True,
+                )
+            )
             existing.add(name)
             imported += 1
         return imported
@@ -55,12 +57,14 @@ class PresetManager:
         visible = await self.list_presets(user_id)
         if any(p.name == name for p in visible):
             raise ValueError(f"预设名 '{name}' 已存在")
-        return await self.backend.save_preset(Preset(
-            user_id=user_id,
-            name=name,
-            description=description.strip(),
-            system_prompt=system_prompt,
-        ))
+        return await self.backend.save_preset(
+            Preset(
+                user_id=user_id,
+                name=name,
+                description=description.strip(),
+                system_prompt=system_prompt,
+            )
+        )
 
     async def update_preset(
         self,

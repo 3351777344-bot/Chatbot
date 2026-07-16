@@ -1,8 +1,13 @@
 """会话、历史消息、Token 累计与标题管理。"""
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from pathlib import Path
 import re
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from core.chat_engine import ChatEngine
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
 from core.config_manager import AppConfig
 from models.schemas import Message, Session
@@ -21,9 +26,9 @@ class SessionManager:
         preset_id: int | None = None,
         title: str = "新会话",
     ) -> Session:
-        return await self.backend.create_session(Session(
-            user_id=user_id, title=title, model_name=model_name, preset_id=preset_id
-        ))
+        return await self.backend.create_session(
+            Session(user_id=user_id, title=title, model_name=model_name, preset_id=preset_id)
+        )
 
     async def add_message(
         self,
@@ -33,20 +38,24 @@ class SessionManager:
         prompt_tokens: int = 0,
         completion_tokens: int = 0,
     ) -> Message:
-        message = await self.backend.add_message(Message(
-            session_id=session.id,
-            role=role,
-            content=content,
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-        ))
+        message = await self.backend.add_message(
+            Message(
+                session_id=session.id,
+                role=role,
+                content=content,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+            )
+        )
         session.total_prompt_tokens += prompt_tokens
         session.total_completion_tokens += completion_tokens
         await self.backend.update_session(session)
         return message
 
     async def load_messages_as_langchain(self, session_id: int) -> list[BaseMessage]:
-        return [self._to_langchain(message) for message in await self.backend.list_messages(session_id)]
+        return [
+            self._to_langchain(message) for message in await self.backend.list_messages(session_id)
+        ]
 
     async def has_messages(self, session_id: int) -> bool:
         return bool(await self.backend.list_messages(session_id))
@@ -58,7 +67,7 @@ class SessionManager:
         keyword = keyword.strip()
         return await self.backend.search_messages(user_id, keyword) if keyword else []
 
-    async def generate_title(self, first_user_input: str, engine) -> str:
+    async def generate_title(self, first_user_input: str, engine: "ChatEngine") -> str:
         prompt = [
             SystemMessage(content="请用简短中文概括用户意图作为对话标题，只输出标题。"),
             HumanMessage(content=first_user_input),
@@ -90,7 +99,9 @@ class SessionManager:
             return None
         return session
 
-    async def rename_session(self, session_id: int, new_title: str, user_id: int | None = None) -> None:
+    async def rename_session(
+        self, session_id: int, new_title: str, user_id: int | None = None
+    ) -> None:
         session = await self.get_session(session_id, user_id)
         if session is None:
             raise ValueError("会话不存在或无权访问")
@@ -102,9 +113,7 @@ class SessionManager:
             raise ValueError("会话不存在或无权访问")
         await self.backend.delete_session(session_id)
 
-    async def switch_model(
-        self, session: Session, model_name: str, available: set[str]
-    ) -> None:
+    async def switch_model(self, session: Session, model_name: str, available: set[str]) -> None:
         if model_name not in available:
             raise ValueError(f"模型不可用: {model_name}")
         session.model_name = model_name
@@ -117,15 +126,21 @@ class SessionManager:
         if session is None:
             raise ValueError("会话不存在或无权访问")
         messages = await self.get_session_messages(session_id)
-        safe_title = re.sub(r'[<>:"/\\|?*]+', "_", session.title).strip(" .") or f"session-{session.id}"
+        safe_title = (
+            re.sub(r'[<>:"/\\|?*]+', "_", session.title).strip(" .") or f"session-{session.id}"
+        )
         export_dir = str(self.config.get("export", "dir", default="data/exports"))
         export_dir = export_dir.format(username=username)
         path = Path(export_dir) / f"{safe_title}_{session.id}.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         lines = [
-            f"# {session.title}", "", f"- 用户：{username}", f"- 模型：{session.model_name}",
+            f"# {session.title}",
+            "",
+            f"- 用户：{username}",
+            f"- 模型：{session.model_name}",
             f"- Prompt Token：{session.total_prompt_tokens}",
-            f"- Completion Token：{session.total_completion_tokens}", "",
+            f"- Completion Token：{session.total_completion_tokens}",
+            "",
         ]
         labels = {"human": "用户", "ai": "助手", "system": "系统"}
         for message in messages:

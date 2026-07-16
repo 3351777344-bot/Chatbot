@@ -6,13 +6,16 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+class Entity(BaseModel):
+    id: int = 0
+
+
 def utc_now() -> datetime:
     """返回带时区的 UTC 时间。"""
     return datetime.now(timezone.utc)
 
 
-class User(BaseModel):
-    id: int = 0
+class User(Entity):
     username: str
     default_model: str | None = None
     default_preset_id: int | None = None
@@ -20,8 +23,7 @@ class User(BaseModel):
     updated_at: datetime = Field(default_factory=utc_now)
 
 
-class Session(BaseModel):
-    id: int = 0
+class Session(Entity):
     user_id: int
     title: str
     model_name: str
@@ -35,8 +37,7 @@ class Session(BaseModel):
 MessageRole = Literal["human", "ai", "system"]
 
 
-class Message(BaseModel):
-    id: int = 0
+class Message(Entity):
     session_id: int
     role: MessageRole
     content: str
@@ -45,8 +46,7 @@ class Message(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
 
 
-class Preset(BaseModel):
-    id: int = 0
+class Preset(Entity):
     user_id: int | None = None
     name: str
     description: str = ""
@@ -56,10 +56,8 @@ class Preset(BaseModel):
     updated_at: datetime = Field(default_factory=utc_now)
 
 
-class UserConfig(BaseModel):
-    id: int = 0
+class UserConfig(Entity):
     user_id: int
     key: str
     value: str
     updated_at: datetime = Field(default_factory=utc_now)
-

@@ -84,7 +84,9 @@ def _chunk_to_text(chunk: Any) -> str:
     return str(content) if content else ""
 
 
-def stream_chat(model_name: str, system_prompt: str, history: list[dict[str, str]]) -> Iterable[str]:
+def stream_chat(
+    model_name: str, system_prompt: str, history: list[dict[str, str]]
+) -> Iterable[str]:
     """Yield assistant response chunks for a conversation."""
     model = get_chat_model(model_name)
     messages = to_langchain_messages(system_prompt, history)

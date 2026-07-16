@@ -6,6 +6,7 @@ from pathlib import Path
 try:
     from dotenv import load_dotenv
 except ImportError:
+
     def load_dotenv(*args, **kwargs) -> bool:
         """Fallback used before dependencies are installed."""
         return False

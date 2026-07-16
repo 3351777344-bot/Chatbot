@@ -1,13 +1,14 @@
 """Rich TUI 的统一复用组件。"""
 
+import asyncio
+
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.output.win32 import NoConsoleScreenBufferError
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from prompt_toolkit import PromptSession
-from prompt_toolkit.history import InMemoryHistory
-from prompt_toolkit.output.win32 import NoConsoleScreenBufferError
-import asyncio
 
 console = Console()
 _chat_prompt: PromptSession | None = None

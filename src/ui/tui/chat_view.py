@@ -1,10 +1,16 @@
 """多轮流式对话视图。"""
 
+from typing import TYPE_CHECKING
+
 from langchain_core.messages import SystemMessage
+
 from ui.tui import widgets
 
+if TYPE_CHECKING:
+    from ui.tui.app import TUIApp
 
-async def start_chat(app) -> None:
+
+async def start_chat(app: "TUIApp") -> None:
     if app.current_user is None:
         widgets.print_warning("请先创建或切换用户")
         return
@@ -59,7 +65,7 @@ async def start_chat(app) -> None:
             await app.session_manager.update_title(app.current_session, title)
 
 
-async def _new_session(app) -> None:
+async def _new_session(app: "TUIApp") -> None:
     model = app.current_user.default_model or app.config.default_model
     app.current_session = await app.session_manager.create_session(
         app.current_user.id,
@@ -69,7 +75,7 @@ async def _new_session(app) -> None:
     widgets.print_success(f"已新建会话（id={app.current_session.id}，模型={model}）")
 
 
-async def _handle_command(app, command: str) -> bool:
+async def _handle_command(app: "TUIApp", command: str) -> bool:
     name, _, argument = command.partition(" ")
     if name == "/exit":
         return True

@@ -7,11 +7,17 @@ from core.config_manager import get_config
 
 class FakeLLM:
     def invoke(self, messages):
-        return AIMessage(content="complete", usage_metadata={"input_tokens": 2, "output_tokens": 3, "total_tokens": 5})
+        return AIMessage(
+            content="complete",
+            usage_metadata={"input_tokens": 2, "output_tokens": 3, "total_tokens": 5},
+        )
 
     async def astream(self, messages):
         yield AIMessageChunk(content="stream ")
-        yield AIMessageChunk(content="reply", usage_metadata={"input_tokens": 4, "output_tokens": 2, "total_tokens": 6})
+        yield AIMessageChunk(
+            content="reply",
+            usage_metadata={"input_tokens": 4, "output_tokens": 2, "total_tokens": 6},
+        )
 
 
 @pytest.mark.asyncio

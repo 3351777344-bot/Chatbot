@@ -64,7 +64,9 @@ def main() -> None:
         model_choice = st.selectbox(
             "Model",
             options=model_names,
-            index=model_names.index(current_model) if current_model in model_names else model_names.index(DEFAULT_MODEL),
+            index=model_names.index(current_model)
+            if current_model in model_names
+            else model_names.index(DEFAULT_MODEL),
         )
         role_choice = st.selectbox(
             "Role",

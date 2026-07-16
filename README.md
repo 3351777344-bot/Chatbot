@@ -27,20 +27,84 @@ Rich TUI，支持多轮流式对话、用户与预设管理、历史会话、搜
 - 调用真实模型时需要 OpenAI-compatible API Key
 - prod 或手动切换 MySQL 时需要可访问的 MySQL 服务
 
-## 快速开始
+## 项目启动
 
-在项目根目录执行：
+以下步骤启动当前主线的 Rich TUI 应用。所有命令均需在项目根目录执行。
+
+### 1. 安装依赖
+
+确认已安装 Python 和 `uv`，然后创建项目虚拟环境并安装锁定依赖：
 
 ```powershell
 uv sync
+```
+
+`uv sync` 会在项目目录下创建 `.venv`。如果本机没有符合要求的 Python，可先执行：
+
+```powershell
+uv python install 3.12
+uv sync --python 3.12
+```
+
+### 2. 配置开发环境
+
+首次启动时，从模板创建本地开发环境文件。
+
+PowerShell：
+
+```powershell
 Copy-Item .env.dev.example .env.dev
-# 编辑 .env.dev，填写 API_BASE_URL、API_KEY 和 MODEL_NAME
+```
+
+macOS / Linux：
+
+```bash
+cp .env.dev.example .env.dev
+```
+
+打开 `.env.dev` 并填写以下配置：
+
+```dotenv
+API_BASE_URL=https://api.deepseek.com/v1
+API_KEY=替换为你的_API_Key
+MODEL_NAME=deepseek-chat
+MYSQL_PASSWORD=
+```
+
+- `API_BASE_URL`：OpenAI-compatible 服务地址。
+- `API_KEY`：对应服务的 API Key。
+- `MODEL_NAME`：调用的模型名称，并应存在于 `config.yaml` 的 `models.available` 白名单中。
+- `MYSQL_PASSWORD`：开发环境默认使用 SQLite，可保持为空。
+
+`.env.dev` 已被 Git 忽略，不要将真实密钥写入 `.env.dev.example` 或其他受版本控制的文件。
+
+### 3. 启动应用
+
+开发环境是默认环境，可以直接启动：
+
+```powershell
+uv run python src/main.py
+```
+
+也可以显式指定环境。PowerShell：
+
+```powershell
 $env:APP_ENV = "dev"
 uv run python src/main.py
 ```
 
-如果没有配置真实 API Key，菜单、用户、预设、会话和存储功能仍可使用；实际发送对话时模型
-调用会失败。真实 `.env*`、`data/` 和 `logs/` 均已被 Git 忽略。
+macOS / Linux：
+
+```bash
+APP_ENV=dev uv run python src/main.py
+```
+
+启动成功后，终端会显示当前存储后端和默认模型，并进入交互式主菜单。首次使用请先在
+“用户管理”中创建用户，然后选择“开始对话”。需要停止应用时，在主菜单选择“退出”。
+
+如果暂未配置有效 API Key，用户、预设、会话和存储等本地功能仍可使用，但发送消息时的
+模型调用会失败。开发环境运行数据默认写入 `data/dev/`，日志写入 `logs/`；这些目录均已被
+Git 忽略。
 
 ## 多环境配置
 

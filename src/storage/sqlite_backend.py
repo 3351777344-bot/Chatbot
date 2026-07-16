@@ -94,7 +94,13 @@ class SQLiteBackend(StorageBackend):
     async def create_user(self, user: User) -> User:
         cursor = await self.conn.execute(
             "INSERT INTO users(username,default_model,default_preset_id,created_at,updated_at) VALUES(?,?,?,?,?)",
-            (user.username, user.default_model, user.default_preset_id, user.created_at.isoformat(), user.updated_at.isoformat()),
+            (
+                user.username,
+                user.default_model,
+                user.default_preset_id,
+                user.created_at.isoformat(),
+                user.updated_at.isoformat(),
+            ),
         )
         await self.conn.commit()
         user.id = int(cursor.lastrowid or 0)
@@ -111,7 +117,13 @@ class SQLiteBackend(StorageBackend):
         user.updated_at = datetime.now(timezone.utc)
         await self.conn.execute(
             "UPDATE users SET username=?,default_model=?,default_preset_id=?,updated_at=? WHERE id=?",
-            (user.username, user.default_model, user.default_preset_id, user.updated_at.isoformat(), user.id),
+            (
+                user.username,
+                user.default_model,
+                user.default_preset_id,
+                user.updated_at.isoformat(),
+                user.id,
+            ),
         )
         await self.conn.commit()
 
@@ -123,9 +135,16 @@ class SQLiteBackend(StorageBackend):
         cursor = await self.conn.execute(
             """INSERT INTO sessions(user_id,title,model_name,preset_id,total_prompt_tokens,
             total_completion_tokens,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)""",
-            (session.user_id, session.title, session.model_name, session.preset_id,
-             session.total_prompt_tokens, session.total_completion_tokens,
-             session.created_at.isoformat(), session.updated_at.isoformat()),
+            (
+                session.user_id,
+                session.title,
+                session.model_name,
+                session.preset_id,
+                session.total_prompt_tokens,
+                session.total_completion_tokens,
+                session.created_at.isoformat(),
+                session.updated_at.isoformat(),
+            ),
         )
         await self.conn.commit()
         session.id = int(cursor.lastrowid or 0)
@@ -136,7 +155,9 @@ class SQLiteBackend(StorageBackend):
         return self._session(row) if row else None
 
     async def list_sessions(self, user_id: int) -> list[Session]:
-        rows = await self._all("SELECT * FROM sessions WHERE user_id=? ORDER BY updated_at DESC,id DESC", (user_id,))
+        rows = await self._all(
+            "SELECT * FROM sessions WHERE user_id=? ORDER BY updated_at DESC,id DESC", (user_id,)
+        )
         return [self._session(row) for row in rows]
 
     async def update_session(self, session: Session) -> None:
@@ -144,8 +165,15 @@ class SQLiteBackend(StorageBackend):
         await self.conn.execute(
             """UPDATE sessions SET title=?,model_name=?,preset_id=?,total_prompt_tokens=?,
             total_completion_tokens=?,updated_at=? WHERE id=?""",
-            (session.title, session.model_name, session.preset_id, session.total_prompt_tokens,
-             session.total_completion_tokens, session.updated_at.isoformat(), session.id),
+            (
+                session.title,
+                session.model_name,
+                session.preset_id,
+                session.total_prompt_tokens,
+                session.total_completion_tokens,
+                session.updated_at.isoformat(),
+                session.id,
+            ),
         )
         await self.conn.commit()
 
@@ -157,17 +185,26 @@ class SQLiteBackend(StorageBackend):
         cursor = await self.conn.execute(
             """INSERT INTO messages(session_id,role,content,prompt_tokens,completion_tokens,created_at)
             VALUES(?,?,?,?,?,?)""",
-            (message.session_id, message.role, message.content, message.prompt_tokens,
-             message.completion_tokens, message.created_at.isoformat()),
+            (
+                message.session_id,
+                message.role,
+                message.content,
+                message.prompt_tokens,
+                message.completion_tokens,
+                message.created_at.isoformat(),
+            ),
         )
         await self.conn.commit()
         message.id = int(cursor.lastrowid or 0)
         return message
 
     async def list_messages(self, session_id: int) -> list[Message]:
-        return [self._message(row) for row in await self._all(
-            "SELECT * FROM messages WHERE session_id=? ORDER BY id", (session_id,)
-        )]
+        return [
+            self._message(row)
+            for row in await self._all(
+                "SELECT * FROM messages WHERE session_id=? ORDER BY id", (session_id,)
+            )
+        ]
 
     async def search_messages(self, user_id: int, keyword: str) -> list[Message]:
         rows = await self._all(
@@ -183,16 +220,29 @@ class SQLiteBackend(StorageBackend):
             cursor = await self.conn.execute(
                 """INSERT INTO presets(user_id,name,description,system_prompt,is_builtin,created_at,updated_at)
                 VALUES(?,?,?,?,?,?,?)""",
-                (preset.user_id, preset.name, preset.description, preset.system_prompt,
-                 int(preset.is_builtin), preset.created_at.isoformat(), preset.updated_at.isoformat()),
+                (
+                    preset.user_id,
+                    preset.name,
+                    preset.description,
+                    preset.system_prompt,
+                    int(preset.is_builtin),
+                    preset.created_at.isoformat(),
+                    preset.updated_at.isoformat(),
+                ),
             )
             preset.id = int(cursor.lastrowid or 0)
         else:
             await self.conn.execute(
                 """UPDATE presets SET name=?,description=?,system_prompt=?,is_builtin=?,updated_at=?
                 WHERE id=?""",
-                (preset.name, preset.description, preset.system_prompt, int(preset.is_builtin),
-                 preset.updated_at.isoformat(), preset.id),
+                (
+                    preset.name,
+                    preset.description,
+                    preset.system_prompt,
+                    int(preset.is_builtin),
+                    preset.updated_at.isoformat(),
+                    preset.id,
+                ),
             )
         await self.conn.commit()
         return preset
@@ -202,7 +252,10 @@ class SQLiteBackend(StorageBackend):
         return self._preset(row) if row else None
 
     async def list_presets(self, user_id: int) -> list[Preset]:
-        rows = await self._all("SELECT * FROM presets WHERE user_id IS NULL OR user_id=? ORDER BY is_builtin DESC,id", (user_id,))
+        rows = await self._all(
+            "SELECT * FROM presets WHERE user_id IS NULL OR user_id=? ORDER BY is_builtin DESC,id",
+            (user_id,),
+        )
         return [self._preset(row) for row in rows]
 
     async def delete_preset(self, preset_id: int) -> None:
@@ -210,7 +263,9 @@ class SQLiteBackend(StorageBackend):
         await self.conn.commit()
 
     async def get_user_config(self, user_id: int, key: str) -> str | None:
-        row = await self._one("SELECT value FROM user_configs WHERE user_id=? AND key=?", (user_id, key))
+        row = await self._one(
+            "SELECT value FROM user_configs WHERE user_id=? AND key=?", (user_id, key)
+        )
         return str(row["value"]) if row else None
 
     async def set_user_config(self, config: UserConfig) -> None:

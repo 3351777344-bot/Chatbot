@@ -1,8 +1,8 @@
 """SQLite connection, schema initialization, and small data-access helpers."""
 
 import sqlite3
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from config.settings import DATABASE_PATH
 

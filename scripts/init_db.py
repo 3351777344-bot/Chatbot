@@ -22,4 +22,3 @@ async def initialize_database() -> None:
 
 if __name__ == "__main__":
     asyncio.run(initialize_database())
-

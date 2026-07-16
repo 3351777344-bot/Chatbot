@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 import yaml
 
@@ -11,7 +9,9 @@ from core.user_manager import UserManager
 @pytest.mark.asyncio
 async def test_session_permissions_search_and_export(backend, tmp_path):
     config_path = tmp_path / "config.yaml"
-    config_path.write_text(yaml.safe_dump({"export": {"dir": str(tmp_path / "exports")}}), encoding="utf-8")
+    config_path.write_text(
+        yaml.safe_dump({"export": {"dir": str(tmp_path / "exports")}}), encoding="utf-8"
+    )
     manager = SessionManager(backend, AppConfig(config_path))
     users = UserManager(backend)
     alice = await users.create_user("alice")
